@@ -165,58 +165,35 @@ public class IndexingStats implements Writeable, ToXContentFragment {
             docStatusStats = new DocStatusStats();
         }
 
-        public Stats(StreamInput in) throws IOException {
-            indexCount = in.readVLong();
-            indexTimeInMillis = in.readVLong();
-            indexCurrent = in.readVLong();
-            indexFailedCount = in.readVLong();
-            deleteCount = in.readVLong();
-            deleteTimeInMillis = in.readVLong();
-            deleteCurrent = in.readVLong();
-            noopUpdateCount = in.readVLong();
-            isThrottled = in.readBoolean();
-            throttleTimeInMillis = in.readLong();
-            if (in.getVersion().onOrAfter(Version.V_3_2_0)) {
-                maxLastIndexRequestTimestamp = in.readLong();
-            } else {
-                maxLastIndexRequestTimestamp = 0L;
-            }
-            if (in.getVersion().onOrAfter(Version.V_2_11_0)) {
-                docStatusStats = in.readOptionalWriteable(DocStatusStats::new);
-            } else {
-                docStatusStats = null;
-            }
+
+
+        /**
+         * Private constructor that takes a builder.
+         * This is the sole entry point for creating a new Stats object.
+         * @param builder The builder instance containing all the values.
+         */
+        private Stats(Builder builder) {
+            this.indexCount = builder.indexCount;
+            this.indexTimeInMillis = builder.indexTimeInMillis;
+            this.indexCurrent = builder.indexCurrent;
+            this.indexFailedCount = builder.indexFailedCount;
+
+            this.deleteCount = builder.deleteCount;
+            this.deleteTimeInMillis = builder.deleteTimeInMillis;
+            this.deleteCurrent = builder.deleteCurrent;
+
+            this.noopUpdateCount = builder.noopUpdateCount;
+            this.isThrottled = builder.isThrottled;
+            this.throttleTimeInMillis = builder.throttleTimeInMillis;
+            this.docStatusStats = builder.docStatusStats;
+            this.maxLastIndexRequestTimestamp = builder.maxLastIndexRequestTimestamp;
         }
 
-        public Stats(
-            long indexCount,
-            long indexTimeInMillis,
-            long indexCurrent,
-            long indexFailedCount,
-            long deleteCount,
-            long deleteTimeInMillis,
-            long deleteCurrent,
-            long noopUpdateCount,
-            boolean isThrottled,
-            long throttleTimeInMillis,
-            DocStatusStats docStatusStats
-        ) {
-            this(
-                indexCount,
-                indexTimeInMillis,
-                indexCurrent,
-                indexFailedCount,
-                deleteCount,
-                deleteTimeInMillis,
-                deleteCurrent,
-                noopUpdateCount,
-                isThrottled,
-                throttleTimeInMillis,
-                docStatusStats,
-                0L
-            );
-        }
-
+        /**
+         * This constructor will be deprecated in 4.0
+         * Use Builder to create Stats object
+         */
+        @Deprecated
         public Stats(
             long indexCount,
             long indexTimeInMillis,
@@ -245,6 +222,34 @@ public class IndexingStats implements Writeable, ToXContentFragment {
             this.maxLastIndexRequestTimestamp = maxLastIndexRequestTimestamp;
         }
 
+        public Stats(StreamInput in) throws IOException {
+            indexCount = in.readVLong();
+            indexTimeInMillis = in.readVLong();
+            indexCurrent = in.readVLong();
+            indexFailedCount = in.readVLong();
+            deleteCount = in.readVLong();
+            deleteTimeInMillis = in.readVLong();
+            deleteCurrent = in.readVLong();
+            noopUpdateCount = in.readVLong();
+            isThrottled = in.readBoolean();
+            throttleTimeInMillis = in.readLong();
+            if (in.getVersion().onOrAfter(Version.V_3_2_0)) {
+                maxLastIndexRequestTimestamp = in.readLong();
+            } else {
+                maxLastIndexRequestTimestamp = 0L;
+            }
+            if (in.getVersion().onOrAfter(Version.V_2_11_0)) {
+                docStatusStats = in.readOptionalWriteable(DocStatusStats::new);
+            } else {
+                docStatusStats = null;
+            }
+        }
+
+        /**
+         * Accumulates the given {@link Stats} into this one
+         *
+         * @param stats the stats to accumulate
+         */
         public void add(Stats stats) {
             indexCount += stats.indexCount;
             indexTimeInMillis += stats.indexTimeInMillis;
@@ -386,6 +391,123 @@ public class IndexingStats implements Writeable, ToXContentFragment {
             return builder;
         }
 
+    }
+
+    /**
+     * Builder for the {@link Stats} class.
+     * Provides a fluent API for constructing a Stats object.
+     */
+    public static class Builder {
+        private long indexCount = 0L;
+        private long indexTimeInMillis = 0L;
+        private long indexCurrent = 0L;
+        private long indexFailedCount = 0L;
+        private long deleteCount = 0L;
+        private long deleteTimeInMillis = 0L;
+        private long deleteCurrent = 0L;
+        private long noopUpdateCount = 0L;
+        private boolean isThrottled = false;
+        private long throttleTimeInMillis = 0L;
+        private Stats.DocStatusStats docStatusStats = null;
+        private long maxLastIndexRequestTimestamp = 0L;
+
+        public Builder() {}
+
+        public Builder indexCount(long indexCount) {
+            this.indexCount = indexCount;
+            return this;
+        }
+
+        public Builder indexTimeInMillis(long indexTimeInMillis) {
+            this.indexTimeInMillis = indexTimeInMillis;
+            return this;
+        }
+
+        public Builder indexCurrent(long indexCurrent) {
+            this.indexCurrent = indexCurrent;
+            return this;
+        }
+
+        public Builder indexFailedCount(long indexFailedCount) {
+            this.indexFailedCount = indexFailedCount;
+            return this;
+        }
+
+        public Builder deleteCount(long deleteCount) {
+            this.deleteCount = deleteCount;
+            return this;
+        }
+
+        public Builder deleteTimeInMillis(long deleteTimeInMillis) {
+            this.deleteTimeInMillis = deleteTimeInMillis;
+            return this;
+        }
+
+        public Builder deleteCurrent(long deleteCurrent) {
+            this.deleteCurrent = deleteCurrent;
+            return this;
+        }
+
+        public Builder noopUpdateCount(long noopUpdateCount) {
+            this.noopUpdateCount = noopUpdateCount;
+            return this;
+        }
+
+        public Builder isThrottled(boolean isThrottled) {
+            this.isThrottled = isThrottled;
+            return this;
+        }
+
+        public Builder throttleTimeInMillis(long throttleTimeInMillis) {
+            this.throttleTimeInMillis = throttleTimeInMillis;
+            return this;
+        }
+
+        public Builder docStatusStats(Stats.DocStatusStats docStatusStats) {
+            this.docStatusStats = docStatusStats;
+            return this;
+        }
+
+        public Builder maxLastIndexRequestTimestamp(long maxLastIndexRequestTimestamp) {
+            this.maxLastIndexRequestTimestamp = maxLastIndexRequestTimestamp;
+            return this;
+        }
+
+
+        /**
+         * Convenience method to set index time using TimeValue
+         * @param indexTime the index time as TimeValue
+         * @return this builder instance
+         */
+        public Builder indexTime(TimeValue indexTime) {
+            this.indexTimeInMillis = indexTime.millis();
+            return this;
+        }
+
+        /**
+         * Convenience method to set delete time using TimeValue
+         * @param deleteTime the delete time as TimeValue
+         * @return this builder instance
+         */
+        public Builder deleteTime(TimeValue deleteTime) {
+            this.deleteTimeInMillis = deleteTime.millis();
+            return this;
+        }
+
+        /**
+         * Convenience method to set throttle time using TimeValue
+         * @param throttleTime the throttle time as TimeValue
+         * @return this builder instance
+         */
+        public Builder throttleTime(TimeValue throttleTime) {
+            this.throttleTimeInMillis = throttleTime.millis();
+            return this;
+        }
+
+//        Review: do i even need this?
+        public Stats build() {
+            return new Stats(this);
+        }
     }
 
     private final Stats totalStats;
